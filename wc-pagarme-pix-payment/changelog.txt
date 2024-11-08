@@ -1,5 +1,10 @@
 == Changelog ==
 
+= 2.2.2 =
+
+* Opção de Enviar E-mail de pagamento do PIX pro cliente
+* Correção de Bugs
+
 = 2.1.8 =
 
 * Salvamento dos campos de configuração (Fixado)

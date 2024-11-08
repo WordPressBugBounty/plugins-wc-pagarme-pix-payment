@@ -2,6 +2,7 @@
 
 namespace WCPagarmePixPayment;
 
+use WCPagarmePixPayment\Emails\PaymentEmail;
 use WCPagarmePixPayment\WP\Helper as WP;
 use WCPagarmePixPayment\Gateway\BaseGateway;
 use WCPagarmePixPayment\Gateway\PagarmePixGatewayBlocksSupport;
@@ -108,6 +109,14 @@ class Core {
 		WP::add_action( 'woocommerce_view_order', $this, 'woocommerce_view_order_page', 2 );
 		WP::add_action( 'before_woocommerce_init', $this, 'woocommerce_declare_compatibility' );
 		WP::add_action( 'woocommerce_blocks_loaded', $this, 'woocommerce_gateway_woocommerce_block_support' );
+		WP::add_action( 'admin_init', $this, 'hide_notices' );
+		WP::add_action( 'admin_notices', $this, 'sugestion_admin_notice' );
+
+		WP::add_filter( 'woocommerce_email_classes', $this, 'include_emails' );
+
+		add_action( 'woocommerce_checkout_process', function () {
+			$opa = "";
+		} );
 	}
 
 	public function head() {
@@ -235,6 +244,53 @@ class Core {
 					$payment_method_registry->register( new PagarmePixGatewayBlocksSupport() );
 				}
 			);
+		}
+	}
+
+	public function sugestion_admin_notice() {
+		if ( ( ! class_exists( 'WC_Correios' ) && ! class_exists( 'Virtuaria_Correios' ) && ! class_exists( 'Melhor_Envio_Plugin' ) ) || class_exists( 'Infixs\CorreiosAutomatico\Container' ) ) {
+			return;
+		}
+
+		$dismissTime = get_user_meta( get_current_user_id(), '_wc_pagarme_pix_payment_dismissed_notice_plugin_sugestion', true );
+
+		if ( $dismissTime ) {
+			$now = time();
+			$diff = $now - $dismissTime;
+			if ( $diff < MONTH_IN_SECONDS ) {
+				return;
+			}
+		}
+
+		include \WC_PAGARME_PIX_PAYMENT_PLUGIN_PATH . 'src/Presentation/admin/notices/plugin-sugestion.php';
+	}
+
+
+	/**
+	 * Include custom emails.
+	 *
+	 * @param array $emails
+	 * @return array
+	 */
+	public function include_emails( $emails ) {
+		if ( ! isset( $emails['WC_Pagarme_Pix_Payment_Email'] ) ) {
+			$emails['WC_Pagarme_Pix_Payment_Email'] = new PaymentEmail();
+		}
+		return $emails;
+	}
+
+	/**
+	 * Hide a notice if the GET variable is set.
+	 */
+	public static function hide_notices() {
+		if ( isset( $_GET['pppinf-hide-notice'] ) && isset( $_GET['_pppinf_notice_nonce'] ) ) {
+			if ( ! wp_verify_nonce( sanitize_key( wp_unslash( $_GET['_pppinf_notice_nonce'] ) ), 'pppinf_hide_notices_nonce' ) ) {
+				wp_die( esc_html__( 'Action failed. Please refresh the page and retry.', 'wc-pagarme-pix-payment' ) );
+			}
+
+			$notice_name = sanitize_text_field( wp_unslash( $_GET['pppinf-hide-notice'] ) );
+
+			update_user_meta( get_current_user_id(), '_wc_pagarme_pix_payment_dismissed_notice_' . $notice_name, time() );
 		}
 	}
 }

@@ -5,7 +5,7 @@ Tags: woocommerce, payment, pix, pagamento, pagarme
 Requires at least: 4.0
 Requires PHP: 7.0
 Tested up to: 6.6
-Stable tag: 2.2.1
+Stable tag: 2.3.0
 License: GPLv2 or later
 Language: pt_BR
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -55,24 +55,8 @@ Muitas vezes a opção de receber PIX pela Pagar.me vem desativada por padrão, 
 
 Compativel com a última versão do Woocommerce.
 
-== 2.1.3 ==
-
-* V4 Fix Fingerprint
-
-== 2.1.2 ==
-
-* WooCommerce HPOS compatibilidade
-* Wordpress Block Support
-
-== 2.1.0 ==
-
-* Validação de CPF
-
-== 2.0.9 ==
-
-* Adicionado informações de pagamento dentro do detalhe do pedido (caso o cliente saia da tela do pagamento)
-* Corrigido Pedidos Vazios gerados quando é usado o plugin em conjunto com o Oficial da pagar.me
-
-== 2.0.8 ==
-
-* Correção do Bug de número quebrado que estava dando erro ao finalizar compra
+== Changelog ==
+ 
+= 2.2.2 =
+* Opção de Enviar E-mail de pagamento do PIX pro cliente
+* Correção de Bugs

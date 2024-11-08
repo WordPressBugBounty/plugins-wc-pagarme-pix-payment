@@ -4,6 +4,7 @@ namespace WCPagarmePixPayment\Gateway;
 
 use WC_Payment_Gateway;
 use WC_Logger;
+use WCPagarmePixPayment\Emails\PaymentEmail;
 use WCPagarmePixPayment\Pagarme\PagarmeApiV4;
 use WC_Admin_Settings;
 use WCPagarmePixPayment\Pagarme\PagarmeApiV5;
@@ -137,13 +138,13 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 
 		switch ( $current_tab ) {
 			case 'general':
-				$title = filter_input( INPUT_POST, $this->get_field_name( 'title' ), FILTER_SANITIZE_STRING );
-				$api_key = filter_input( INPUT_POST, $this->get_field_name( 'api_key' ), FILTER_SANITIZE_STRING );
-				$api_version = filter_input( INPUT_POST, $this->get_field_name( 'api_version' ), FILTER_SANITIZE_STRING );
-				$encryption_key = filter_input( INPUT_POST, $this->get_field_name( 'encryption_key' ), FILTER_SANITIZE_STRING );
-				$secret_key = filter_input( INPUT_POST, $this->get_field_name( 'secret_key' ), FILTER_SANITIZE_STRING );
-				$debug = filter_input( INPUT_POST, $this->get_field_name( 'debug' ), FILTER_SANITIZE_STRING );
-				$after_paid_status = filter_input( INPUT_POST, $this->get_field_name( 'after_paid_status' ), FILTER_SANITIZE_STRING );
+				$title = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'title' ), FILTER_UNSAFE_RAW ) );
+				$api_key = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'api_key' ), FILTER_UNSAFE_RAW ) );
+				$api_version = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'api_version' ), FILTER_UNSAFE_RAW ) );
+				$encryption_key = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'encryption_key' ), FILTER_UNSAFE_RAW ) );
+				$secret_key = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'secret_key' ), FILTER_UNSAFE_RAW ) );
+				$debug = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'debug' ), FILTER_UNSAFE_RAW ) );
+				$after_paid_status = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'after_paid_status' ), FILTER_UNSAFE_RAW ) );
 
 				if ( ( $api_version == 'v4' && ( empty( $api_key ) || empty( $encryption_key ) ) ) || empty( $title ) || empty( $api_version ) ) {
 					WC_Admin_Settings::add_error( __( 'É preciso preencher a todos os campos', \WC_PAGARME_PIX_PAYMENT_DIR_NAME ) );
@@ -155,7 +156,7 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 				$update_settings['title'] = $title;
 				$update_settings['encryption_key'] = $encryption_key;
 				$update_settings['secret_key'] = $secret_key;
-				$update_settings['debug'] = isset( $debug ) ? 'yes' : 'no';
+				$update_settings['debug'] = ! empty( $debug ) ? 'yes' : 'no';
 				$update_settings['after_paid_status'] = $after_paid_status;
 
 				$this->api_key = $update_settings['api_key'];
@@ -171,8 +172,6 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 				$checkout_message = filter_input( INPUT_POST, $this->get_field_name( 'checkout_message' ) ); //Liberar HTML
 				$order_recived_message = filter_input( INPUT_POST, $this->get_field_name( 'order_recived_message' ) );
 				$thank_you_message = filter_input( INPUT_POST, $this->get_field_name( 'thank_you_message' ) );
-				$pix_icon_color = filter_input( INPUT_POST, $this->get_field_name( 'pix_icon_color' ), FILTER_SANITIZE_STRING );
-				$pix_icon_size = filter_input( INPUT_POST, $this->get_field_name( 'pix_icon_size' ), FILTER_SANITIZE_STRING );
 
 				if ( empty( $checkout_message ) || empty( $order_recived_message ) || empty( $thank_you_message ) ) {
 					//WC_Admin_Settings::add_error( __('É preciso preencher a todos os campos', \WC_PAGARME_PIX_PAYMENT_DIR_NAME) ); 
@@ -181,30 +180,19 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 				$update_settings['checkout_message'] = $checkout_message;
 				$update_settings['order_recived_message'] = $order_recived_message;
 				$update_settings['thank_you_message'] = $thank_you_message;
-				$update_settings['pix_icon_color'] = $pix_icon_color;
-				$update_settings['pix_icon_size'] = $pix_icon_size;
 
 				$this->checkout_message = $update_settings['checkout_message'];
 				$this->order_recived_message = $update_settings['order_recived_message'];
 				$this->thank_you_message = $update_settings['thank_you_message'];
-				$this->pix_icon_color = $update_settings['pix_icon_color'];
-				$this->pix_icon_size = $update_settings['pix_icon_size'];
 
 				break;
 			case 'email':
-				$email_instruction = filter_input( INPUT_POST, $this->get_field_name( 'email_instruction' ) ); //Allow HTML
-				$email_instruction = preg_replace( '#<script(.*?)>(.*?)</script>#is', '', $email_instruction );
-				$email_instruction = preg_replace( '/”/', '"', $email_instruction );
-				$update_settings['email_instruction'] = $email_instruction;
-
-				$this->email_instruction = $update_settings['email_instruction'];
-
 				break;
 			case 'advanced':
 				$check_payment_interval = filter_input( INPUT_POST, $this->get_field_name( 'check_payment_interval' ), FILTER_SANITIZE_NUMBER_INT );
-				$auto_cancel = filter_input( INPUT_POST, $this->get_field_name( 'auto_cancel' ), FILTER_SANITIZE_STRING );
-				$page_refresh = filter_input( INPUT_POST, $this->get_field_name( 'page_refresh' ), FILTER_SANITIZE_STRING );
-				$apply_discount = filter_input( INPUT_POST, $this->get_field_name( 'apply_discount' ), FILTER_SANITIZE_STRING );
+				$auto_cancel = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'auto_cancel' ), FILTER_UNSAFE_RAW ) );
+				$page_refresh = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'page_refresh' ), FILTER_UNSAFE_RAW ) );
+				$apply_discount = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'apply_discount' ), FILTER_UNSAFE_RAW ) );
 				$apply_discount_amount = filter_input( INPUT_POST, $this->get_field_name( 'apply_discount_amount' ), FILTER_UNSAFE_RAW );
 				$apply_discount_type = filter_input( INPUT_POST, $this->get_field_name( 'apply_discount_type' ), FILTER_UNSAFE_RAW );
 				$expiration_days = filter_input( INPUT_POST, $this->get_field_name( 'expiration_days' ), FILTER_VALIDATE_INT );
@@ -240,17 +228,17 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 					return;
 				}
 
-				if ( isset( $apply_discount ) && ( empty( $apply_discount_amount ) || empty( $apply_discount_type ) ) ) {
+				if ( ! empty( $apply_discount ) && ( empty( $apply_discount_amount ) || empty( $apply_discount_type ) ) ) {
 					WC_Admin_Settings::add_error( __( 'Ao ativar o desconto você precisa preencher os campos.', \WC_PAGARME_PIX_PAYMENT_DIR_NAME ) );
 					return;
 				}
 
-				if ( isset( $apply_discount ) && $apply_discount_amount == '0' ) {
+				if ( ! empty( $apply_discount ) && $apply_discount_amount == '0' ) {
 					WC_Admin_Settings::add_error( __( 'O desconto não pode ser 0.', \WC_PAGARME_PIX_PAYMENT_DIR_NAME ) );
 					return;
 				}
 
-				if ( isset( $apply_discount ) && ! preg_match( '/^[0-9]+([\,][0-9]{1,2})?$/i', $apply_discount_amount ) ) {
+				if ( ! empty( $apply_discount ) && ! preg_match( '/^[0-9]+([\,][0-9]{1,2})?$/i', $apply_discount_amount ) ) {
 					WC_Admin_Settings::add_error( __( 'O desconto só poder ter números inteiros ou então separado por "," (vírgula) com até 2 casas decimais: ex: 10 ou 5,80', \WC_PAGARME_PIX_PAYMENT_DIR_NAME ) );
 					return;
 				}
@@ -259,9 +247,9 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 
 
 				$update_settings['check_payment_interval'] = $check_payment_interval;
-				$update_settings['auto_cancel'] = isset( $auto_cancel ) ? 'yes' : 'no';
-				$update_settings['page_refresh'] = isset( $page_refresh ) ? 'yes' : 'no';
-				$update_settings['apply_discount'] = isset( $apply_discount ) ? 'yes' : 'no';
+				$update_settings['auto_cancel'] = ! empty( $auto_cancel ) ? 'yes' : 'no';
+				$update_settings['page_refresh'] = ! empty( $page_refresh ) ? 'yes' : 'no';
+				$update_settings['apply_discount'] = ! empty( $apply_discount ) ? 'yes' : 'no';
 				$update_settings['apply_discount_amount'] = $apply_discount_amount;
 				$update_settings['apply_discount_type'] = $apply_discount_type;
 				$update_settings['expiration_days'] = $expiration_days;
@@ -409,8 +397,8 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 	 * @return string
 	 */
 	protected function get_current_tab() {
-		$current_tab = filter_input( INPUT_GET, 'mgn_tab', FILTER_SANITIZE_STRING );
-		$current_tab = isset( $current_tab ) ? $current_tab : 'general';
+		$current_tab = sanitize_text_field( filter_input( INPUT_GET, 'mgn_tab', FILTER_UNSAFE_RAW ) );
+		$current_tab = $this->tab_exists( $current_tab ) ? $current_tab : 'general';
 
 		return $current_tab;
 	}
@@ -427,6 +415,12 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 		return $tabs[ $this->get_current_tab()];
 	}
 
+	protected function tab_exists( $tab ) {
+		$tabs = $this->get_tabs();
+
+		return array_key_exists( $tab, $tabs );
+	}
+
 	/**
 	 * Tabs
 	 * 
@@ -437,7 +431,6 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 		return [ 
 			'general' => __( 'Geral', 'wc-pagarme-pix-payment' ),
 			'customize' => __( 'Customizar', 'wc-pagarme-pix-payment' ),
-			'email' => __( 'E-mail', 'wc-pagarme-pix-payment' ),
 			'advanced' => __( 'Avançado', 'wc-pagarme-pix-payment' ),
 			'donate' => __( 'Doação', 'wc-pagarme-pix-payment' )
 		];
@@ -454,10 +447,10 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 
 		$tab_template = \WC_PAGARME_PIX_PAYMENT_PLUGIN_PATH . 'templates/admin/settings/' . $current_tab . '-settings.php';
 
-		require_once ( \WC_PAGARME_PIX_PAYMENT_PLUGIN_PATH . 'templates/admin/settings/header-settings.php' );
+		require_once( \WC_PAGARME_PIX_PAYMENT_PLUGIN_PATH . 'templates/admin/settings/header-settings.php' );
 
 		if ( file_exists( $tab_template ) )
-			require_once ( $tab_template );
+			require_once( $tab_template );
 	}
 
 	/**
@@ -487,7 +480,22 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 	 * @return array Redirect data.
 	 */
 	public function process_payment( $order_id ) {
-		return $this->api->process_regular_payment( $order_id );
+		$response = $this->api->process_regular_payment( $order_id );
+
+		if ( $response['result'] === 'success' ) {
+			$this->trigger_payment_email( $order_id );
+		}
+
+		return $response;
+	}
+
+	public static function trigger_payment_email( $order_id ) {
+		$mailer = WC()->mailer();
+		$notification = $mailer->emails['WC_Pagarme_Pix_Payment_Email'];
+
+		if ( $notification && 'yes' === $notification->enabled ) {
+			$notification->trigger( $order_id );
+		}
 	}
 
 	/**
