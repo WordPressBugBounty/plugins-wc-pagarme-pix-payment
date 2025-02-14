@@ -148,5 +148,24 @@ defined( 'ABSPATH' ) || exit;
 				</p>
 			</td>
 		</tr>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label for="<?php echo esc_html( $this->get_field_name( 'save_as_base64' ) ); ?>">Salvar QR Code como
+					Base64</label>
+			</th>
+			<td class="forminp">
+				<fieldset>
+					<label for="<?php echo esc_html( $this->get_field_name( 'save_as_base64' ) ); ?>">
+						<input class="" type="checkbox"
+							name="<?php echo esc_html( $this->get_field_name( 'save_as_base64' ) ); ?>"
+							id="<?php echo esc_html( $this->get_field_name( 'save_as_base64' ) ); ?>" <?php echo $this->save_as_base64 === 'yes' ? 'checked' : ''; ?>>Salva o QR Code como base64 na página do
+						pedido.</label>
+
+				</fieldset>
+				<p class="description">Ao ativar essa opção o QR Code é salvo como base64 na página do pedido, isso
+					possibilita que o QR Code seja exibido sem fazer request no servidor da pagar.me.</p>
+
+			</td>
+		</tr>
 	</tbody>
 </table>

@@ -179,8 +179,11 @@ class PagarmeApiV5 extends PagarmeApi {
 				'result' => 'fail',
 			);
 		} else {
-
-			if ( extension_loaded( 'mbstring' ) && version_compare( phpversion(), "7.4", ">=" ) ) {
+			$is_base64 = $this->gateway->is_save_as_base64();
+			if ( $is_base64 ) {
+				$qrcode_as_base64 = ( new QRCode )->render( $transaction['charges'][0]['last_transaction']['qr_code'] );
+				$order->update_meta_data( '_wc_pagarme_pix_payment_qr_code_image', $qrcode_as_base64 );
+			} elseif ( extension_loaded( 'mbstring' ) && version_compare( phpversion(), "7.4", ">=" ) ) {
 				$upload = wp_upload_dir();
 				$upload_folder = sprintf( '%s/%s/qr-codes/', $upload['basedir'], \WC_PAGARME_PIX_PAYMENT_DIR_NAME );
 				$upload_url = sprintf( '%s/%s/qr-codes/', $upload['baseurl'], \WC_PAGARME_PIX_PAYMENT_DIR_NAME );

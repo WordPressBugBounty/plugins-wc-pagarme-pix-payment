@@ -5,7 +5,7 @@ Tags: woocommerce, payment, pix, pagamento, pagarme
 Requires at least: 4.0
 Requires PHP: 7.0
 Tested up to: 6.7
-Stable tag: 2.3.0
+Stable tag: 2.3.1
 License: GPLv2 or later
 Language: pt_BR
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -56,6 +56,12 @@ Muitas vezes a opção de receber PIX pela Pagar.me vem desativada por padrão, 
 Compativel com a última versão do Woocommerce.
 
 == Changelog ==
+
+= 2.3.1 =
+* Opção de salvar o QR Code como base64
+* Email para lojista de novo pedido
+* Status aguardando quando o pedido é criado
+* Correção de Bugs
  
 = 2.2.2 =
 * Opção de Enviar E-mail de pagamento do PIX pro cliente

@@ -63,6 +63,8 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 
 	public $page_refresh;
 
+	public $save_as_base64;
+
 
 	/**
 	 * Constructor for the gateway.
@@ -197,6 +199,7 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 				$apply_discount_type = filter_input( INPUT_POST, $this->get_field_name( 'apply_discount_type' ), FILTER_UNSAFE_RAW );
 				$expiration_days = filter_input( INPUT_POST, $this->get_field_name( 'expiration_days' ), FILTER_VALIDATE_INT );
 				$expiration_hours = filter_input( INPUT_POST, $this->get_field_name( 'expiration_hours' ), FILTER_VALIDATE_INT );
+				$save_as_base64 = sanitize_text_field( filter_input( INPUT_POST, $this->get_field_name( 'save_as_base64' ), FILTER_UNSAFE_RAW ) );
 
 				if ( $expiration_hours < 0 ) {
 					WC_Admin_Settings::add_error( __( 'Horas que expiram não pode ser menor que 0', \WC_PAGARME_PIX_PAYMENT_DIR_NAME ) );
@@ -254,6 +257,7 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 				$update_settings['apply_discount_type'] = $apply_discount_type;
 				$update_settings['expiration_days'] = $expiration_days;
 				$update_settings['expiration_hours'] = $expiration_hours;
+				$update_settings['save_as_base64'] = ! empty( $save_as_base64 ) ? 'yes' : 'no';
 
 				$this->auto_cancel = $update_settings['auto_cancel'];
 				$this->check_payment_interval = $update_settings['check_payment_interval'];
@@ -263,6 +267,7 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 				$this->apply_discount_type = $update_settings['apply_discount_type'];
 				$this->expiration_days = $update_settings['expiration_days'];
 				$this->expiration_hours = $update_settings['expiration_hours'];
+				$this->save_as_base64 = $update_settings['save_as_base64'];
 
 				break;
 		}
@@ -378,6 +383,7 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 		$this->apply_discount = $this->get_option( 'apply_discount', 'no' );
 		$this->apply_discount_type = $this->get_option( 'apply_discount_type', 'fixed' );
 		$this->apply_discount_amount = $this->get_option( 'apply_discount_amount', '0' );
+		$this->save_as_base64 = $this->get_option( 'save_as_base64', 'no' );
 	}
 
 	/**
@@ -386,7 +392,7 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 	 * @since 1.1.0
 	 * @return string
 	 */
-	protected function get_field_name( string $field = '' ) {
+	public function get_field_name( string $field = '' ) {
 		return 'woocommerce_' . $this->id . '_' . $field;
 	}
 
@@ -483,6 +489,9 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 		$response = $this->api->process_regular_payment( $order_id );
 
 		if ( $response['result'] === 'success' ) {
+			$order = wc_get_order( $order_id );
+			$order->update_status( apply_filters( 'wc_pagarme_pix_payment_process_payment_order_status', 'on-hold', $order ), __( 'Aguardando pagamento via PIX.', 'wc-pagarme-pix-payment' ) );
+
 			$this->trigger_payment_email( $order_id );
 		}
 
@@ -578,6 +587,13 @@ class PagarmePixGateway extends WC_Payment_Gateway {
 			WC()->template_path() . \WC_PAGARME_PIX_PAYMENT_DIR_NAME . '/',
 			WC_PAGARME_PIX_PAYMENT_PLUGIN_PATH . 'templates/emails/'
 		);
+	}
+
+	/**
+	 * Is Save as Base64 function
+	 */
+	public function is_save_as_base64() {
+		return 'yes' === $this->save_as_base64 ? true : false;
 	}
 
 	/**

@@ -22,8 +22,6 @@ class BaseGateway {
 	 * @return void
 	 */
 	public static function init() {
-		//global $Muscleboss;
-		//$Muscleboss->showErrors();
 		$base = new self();
 
 		$base->expire_payment_scheduled();
@@ -159,7 +157,7 @@ class BaseGateway {
 	 * Add links to plugin settings page.
 	 * 
 	 * @since 1.1.0
-	 * @return void
+	 * @return array
 	 */
 	public function plugin_action_links( $links ) {
 		$pluginLinks = array();
